@@ -173,13 +173,16 @@ function ntopng_sync_package() {
 	/usr/bin/killall redis-server
 EOD;
 
+	$ndpi_protocols_conf = "--ndpi-protocols=/var/db/ntopng/protos.txt";
+
 	$start = <<<EOD
 ### Make sure library path cache is updated
 	/etc/rc.d/ldconfig start
 # Create DB dir before starting, in case it was removed. Otherwise redis will fail.
 	/bin/mkdir -p /var/db/ntopng
+	/bin/touch /var/db/ntopng/protos.txt
 	{$redis_path}/redis-server {$redis_args} &
-	/usr/local/bin/ntopng -d /var/db/ntopng -G /var/run/ntopng.pid -s -e {$http_args} {$disable_alerts} {$dump_flows} {$ifaces} {$dns_mode} {$aggregations} {$local_networks} &
+	/usr/local/bin/ntopng -d /var/db/ntopng -G /var/run/ntopng.pid -s -e {$http_args} {$disable_alerts} {$dump_flows} {$ifaces} {$dns_mode} {$aggregations} {$local_networks} {$ndpi_protocols_conf} &
 EOD;
 	// TODO:
 	// Add support for --data-dir /somewhere, --httpdocs-dir /somewhereelse,
