@@ -90,11 +90,19 @@ function ntopng_sync_package() {
 		return;
 	}
 
+        $uniq_ifaces = array();
 	foreach ($ntopng_config['interface_array'] as $iface) {
 		$if = convert_friendly_interface_to_real_interface_name($iface);
 		if ($if) {
-			$ifaces .= " -i " . escapeshellarg("{$if}");
+			// GTD: ntopng does not seem to want vlan interfaces here (aborts with core dump)
+			if (preg_match('/\A([[:alpha:]]\w+)\.\d+\Z/', $if, $matches)) {
+				$if = $matches[1]; // strip vlan tag
+			}
+			$uniq_ifaces[$if] = 1;
 		}
+	}
+	foreach (array_keys($uniq_ifaces) as $if) {
+		$ifaces .= " -i " . escapeshellarg("{$if}");
 	}
 
 	/* DNS Mode */

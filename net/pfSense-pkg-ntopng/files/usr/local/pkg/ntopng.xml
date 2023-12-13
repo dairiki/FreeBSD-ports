@@ -96,6 +96,13 @@
 		<field>
 			<fielddescr>Interface</fielddescr>
 			<fieldname>interface_array</fieldname>
+			<description>
+				<![CDATA[
+                                Note: ntopng seems to throw an assertion error, then abort if
+                                configured to listen to a vlan interface. For now we will strip
+                                any vlan tag number from any interfaces you select here.
+				]]>
+			</description>
 			<type>interfaces_selection</type>
 			<size>3</size>
 			<default_value>lan</default_value>
