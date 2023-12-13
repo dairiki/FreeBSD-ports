@@ -27,8 +27,9 @@ require_once("service-utils.inc");
 require_once("util.inc");
 require_once("certs.inc");
 
-global $redis_path;
+global $redis_path, $redis_args;
 $redis_path = "/usr/local/bin";
+$redis_args = "--bind 127.0.0.1 ::1 --dir /var/db/ntopng/redis/ --dbfilename ntopng.rdb";
 
 function ntopng_php_install_command() {
 	/* Create dirs for Redis DB, data and graphs */
@@ -68,7 +69,7 @@ function ntopng_write_cert_file($file, $cert) {
 
 
 function ntopng_sync_package() {
-	global $config, $ntopng_config, $redis_path;
+	global $config, $ntopng_config, $redis_path, $redis_args;
 	/* These are done via ntopng_validate_input(), just return */
 	if ($_POST['Submit'] == "Update GeoIP Data") {
 		return;
@@ -169,7 +170,7 @@ EOD;
 	/etc/rc.d/ldconfig start
 # Create DB dir before starting, in case it was removed. Otherwise redis will fail.
 	/bin/mkdir -p /var/db/ntopng
-	{$redis_path}/redis-server --bind 127.0.0.1 ::1 --dir /var/db/ntopng/ --dbfilename ntopng.rdb &
+	{$redis_path}/redis-server {$redis_args} &
 	/usr/local/bin/ntopng -d /var/db/ntopng -G /var/run/ntopng.pid -s -e {$http_args} {$disable_alerts} {$dump_flows} {$ifaces} {$dns_mode} {$aggregations} {$local_networks} &
 EOD;
 	// TODO:
@@ -202,11 +203,11 @@ function ntopng_services_stop() {
 }
 
 function ntopng_redis_started() {
-	global $redis_path, $redis_started;
+	global $redis_path, $redis_args, $redis_started;
 	$redis_started = false;
 
 	if (!is_process_running("redis-server")) {
-		mwexec_bg("{$redis_path}/redis-server --bind 127.0.0.1 ::1 --dir /var/db/ntopng/ --dbfilename ntopng.rdb");
+		mwexec_bg("{$redis_path}/redis-server {$redis_args}");
 		for ($i = 0; $i <= 10; $i++) {
 			if (is_process_running("redis-server")) {
 				$redis_started = true;
@@ -240,8 +241,10 @@ function ntopng_set_redis_password() {
 
 function ntopng_create_datadir() {
 	safe_mkdir("/var/db/ntopng/rrd/graphics", 0755);
+	safe_mkdir("/var/db/ntopng/redis", 0755);
 	mwexec("/bin/chmod -R 755 /var/db/ntopng");
 	mwexec("/usr/sbin/chown -R nobody:nobody /var/db/ntopng");
+	mwexec("/usr/sbin/chown redis:redis /var/db/ntopng/redis");
 }
 
 function ntopng_update_geoip($key) {
