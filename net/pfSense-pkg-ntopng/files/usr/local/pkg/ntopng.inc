@@ -27,8 +27,9 @@ require_once("service-utils.inc");
 require_once("util.inc");
 require_once("certs.inc");
 
-global $redis_path;
+global $redis_path, $redis_args;
 $redis_path = "/usr/local/bin";
+$redis_args = "--bind 127.0.0.1 ::1 --dir /var/db/ntopng/redis/ --dbfilename ntopng.rdb --daemonize yes";
 
 function ntopng_php_install_command() {
 	/* Create dirs for Redis DB, data and graphs */
@@ -68,7 +69,7 @@ function ntopng_write_cert_file($file, $cert) {
 
 
 function ntopng_sync_package() {
-	global $config, $ntopng_config, $redis_path;
+	global $config, $ntopng_config, $redis_path, $redis_args;
 	/* These are done via ntopng_validate_input(), just return */
 	if ($_POST['Submit'] == "Update GeoIP Data") {
 		return;
@@ -89,11 +90,19 @@ function ntopng_sync_package() {
 		return;
 	}
 
+        $uniq_ifaces = array();
 	foreach ($ntopng_config['interface_array'] as $iface) {
 		$if = convert_friendly_interface_to_real_interface_name($iface);
 		if ($if) {
-			$ifaces .= " -i " . escapeshellarg("{$if}");
+			// GTD: ntopng does not seem to want vlan interfaces here (aborts with core dump)
+			if (preg_match('/\A([[:alpha:]]\w+)\.\d+\Z/', $if, $matches)) {
+				$if = $matches[1]; // strip vlan tag
+			}
+			$uniq_ifaces[$if] = 1;
 		}
+	}
+	foreach (array_keys($uniq_ifaces) as $if) {
+		$ifaces .= " -i " . escapeshellarg("{$if}");
 	}
 
 	/* DNS Mode */
@@ -155,23 +164,32 @@ function ntopng_sync_package() {
 	/* Create rc script */
 	$stop = <<<EOD
 # Kill ntopng and redis
-	while pgrep -q ntopng; do
-		/usr/bin/killall ntopng
-		sleep 3
+	pargs="-F /var/run/ntopng.pid ntopng"
+	pkill \$pargs
+	for n in 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15; do
+	    pgrep -q \$pargs || break
+	    sleep 1
 	done
-	/usr/bin/killall redis-cli
+	if pgrep -q \$pargs; then
+	    pkill -SIGKILL \$pargs
+	fi
+
 	{$redis_path}/redis-cli shutdown save
-	/usr/bin/killall redis-server
 EOD;
 
+	$ndpi_protocols_conf = "--ndpi-protocols=/var/db/ntopng/protos.txt";
+
 	$start = <<<EOD
-### Make sure library path cache is updated
-	/etc/rc.d/ldconfig start
-# Create DB dir before starting, in case it was removed. Otherwise redis will fail.
-	/bin/mkdir -p /var/db/ntopng
-	{$redis_path}/redis-server --bind 127.0.0.1 ::1 --dir /var/db/ntopng/ --dbfilename ntopng.rdb &
-	/usr/local/bin/ntopng -d /var/db/ntopng -G /var/run/ntopng.pid -s -e {$http_args} {$disable_alerts} {$dump_flows} {$ifaces} {$dns_mode} {$aggregations} {$local_networks} &
+
+	{$redis_path}/redis-cli ping || {$redis_path}/redis-server {$redis_args}
+
+	/usr/local/bin/ntopng -d /var/db/ntopng -G /var/run/ntopng.pid -s -e {$http_args} {$disable_alerts} {$dump_flows} {$ifaces} {$dns_mode} {$aggregations} {$local_networks} {$ndpi_protocols_conf}
+
 EOD;
+
+        // Make sure library path cache is updated
+	mwexec("/etc/rc.d/ldconfig start");
+
 	// TODO:
 	// Add support for --data-dir /somewhere, --httpdocs-dir /somewhereelse,
 	// --dump-timeline (on/off) --http-port, --https-port
@@ -201,14 +219,21 @@ function ntopng_services_stop() {
 	}
 }
 
+function ntopng_is_redis_responsive() {
+	global $redis_path;
+	$rc = mwexec("{$redis_path}/redis-cli ping", true);
+	return $rc == 0;
+}
+
+
 function ntopng_redis_started() {
-	global $redis_path, $redis_started;
+	global $redis_path, $redis_args, $redis_started;
 	$redis_started = false;
 
-	if (!is_process_running("redis-server")) {
-		mwexec_bg("{$redis_path}/redis-server --bind 127.0.0.1 ::1 --dir /var/db/ntopng/ --dbfilename ntopng.rdb");
+	if (!ntopng_is_redis_responsive()) {
+		mwexec("{$redis_path}/redis-server {$redis_args}");
 		for ($i = 0; $i <= 10; $i++) {
-			if (is_process_running("redis-server")) {
+			if (ntopng_is_redis_responsive()) {
 				$redis_started = true;
 				break;
 			}
@@ -242,6 +267,11 @@ function ntopng_create_datadir() {
 	safe_mkdir("/var/db/ntopng/rrd/graphics", 0755);
 	mwexec("/bin/chmod -R 755 /var/db/ntopng");
 	mwexec("/usr/sbin/chown -R nobody:nobody /var/db/ntopng");
+
+	safe_mkdir("/var/db/ntopng/redis", 0755);
+	mwexec("/usr/sbin/chown redis:redis /var/db/ntopng/redis");
+
+	mwexec("/usr/bin/touch /var/db/ntopng/protos.txt");
 }
 
 function ntopng_update_geoip($key) {
