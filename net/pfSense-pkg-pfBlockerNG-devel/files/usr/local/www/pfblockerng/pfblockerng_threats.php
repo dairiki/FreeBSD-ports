@@ -94,11 +94,21 @@ $pglinks = array('', '/pfblockerng/pfblockerng_general.php', '/pfblockerng/pfblo
 				</tr>
 				<tr>
 					<td><i class="fa fa-globe pull-right"></i></td>
+					<td><a target="_blank" href="https://www.virustotal.com/en/ip-address/<?=$host;?>/information">
+						<?=gettext("VirusTotal Info");?></a></td>
+				</tr>
+				<tr>
+					<td><i class="fa fa-globe pull-right"></i></td>
+					<td><a target="_blank" href="https://viz.greynoise.io/query/?gnql=ip%3A<?=$host;?>">
+						<?=gettext("Grey Noise");?></a></td>
+				</tr>
+				<tr>
+					<td><i class="fa fa-globe pull-right"></i></td>
 					<td><a target="_blank" href="https://dnslytics.com/ip/<?=$host;?>/">
 						<?=gettext("DNSlytics");?></a></td>
 				</tr>
 				<tr>
-					<td><i class="fa fa-globe pull-right"></i></td>	
+					<td><i class="fa fa-globe pull-right"></i></td>
 					<td><a target="_blank" href="http://www.ip-tracker.org/locator/ip-lookup.php?ip=<?=$host;?>">
 						<?=gettext("IP Tracker");?></a></td>
 				</tr>
@@ -111,11 +121,6 @@ $pglinks = array('', '/pfblockerng/pfblockerng_general.php', '/pfblockerng/pfblo
 					<td><i class="fa fa-globe pull-right"></i></td>
 					<td><a target="_blank" href="https://www.projecthoneypot.org/ip_<?=$host;?>">
 						<?=gettext("Project HoneyPot");?></a></td>
-				</tr>
-				<tr>
-					<td><i class="fa fa-globe pull-right"></i></td>
-					<td><a target="_blank" href="https://www.virustotal.com/en/ip-address/<?=$host;?>/information">
-						<?=gettext("VirusTotal Info");?></a></td>
 				</tr>
 				<tr>
 					<td><i class="fa fa-globe pull-right"></i></td>
@@ -229,11 +234,6 @@ $pglinks = array('', '/pfblockerng/pfblockerng_general.php', '/pfblockerng/pfblo
 				</tr>
 				<tr>
 					<td><i class="fa fa-globe pull-right"></i></td>
-					<td><a target="_blank" href="https://viz.greynoise.io/query/?gnql=ip%3A<?=$host;?>">
-						<?=gettext("Grey Noise");?></a></td>
-				</tr>
-				<tr>
-					<td><i class="fa fa-globe pull-right"></i></td>
 					<td><a target="_blank" href="https://api.mnemonic.no/pdns/v3/<?=$host;?>">
 						<?=gettext("mnemonic passiveDNS API");?></a></td>
 				</tr>
@@ -294,6 +294,16 @@ $pglinks = array('', '/pfblockerng/pfblockerng_general.php', '/pfblockerng/pfblo
 					<td>Domain Lookups<i class="fa fa-globe pull-right"></i></td>
 					<td><a target="_blank" href="https://www.talosintelligence.com/reputation_center/lookup?search=<?=$domain;?>">
 						<?=gettext("Talos Threat Intelligence");?></a></td>
+				</tr>
+				<tr>
+					<td><i class="fa fa-globe pull-right"></i></td>
+					<td><a target="_blank" href="https://www.virustotal.com/en/domain/<?=$domain;?>/information/">
+						<?=gettext("Virus Total");?></a></td>
+				</tr>
+				<tr>
+					<td><i class="fa fa-globe pull-right"></i></td>
+					<td><a target="_blank" href="https://viz.greynoise.io/query/?gnql=<?=$domain;?>">
+						<?=gettext("Grey Noise");?></a></td>
 				</tr>
 				<tr>
 					<td><i class="fa fa-globe pull-right"></i></td>
@@ -367,11 +377,6 @@ $pglinks = array('', '/pfblockerng/pfblockerng_general.php', '/pfblockerng/pfblo
 				</tr>
 				<tr>
 					<td><i class="fa fa-globe pull-right"></i></td>
-					<td><a target="_blank" href="https://www.virustotal.com/en/domain/<?=$domain;?>/information/">
-						<?=gettext("Virus Total");?></a></td>
-				</tr>
-				<tr>
-					<td><i class="fa fa-globe pull-right"></i></td>
 					<td><a target="_blank" href="https://otx.alienvault.com/browse/pulses/?q=<?=$domain;?>&sort=-modified">
 						<?=gettext("OTX Alienvault");?></a></td>
 				</tr>
@@ -434,11 +439,6 @@ $pglinks = array('', '/pfblockerng/pfblockerng_general.php', '/pfblockerng/pfblo
 					<td><i class="fa fa-globe pull-right"></i></td>
 					<td><a target="_blank" href="https://www.shodan.io/search?query=<?=$domain;?>">
 						<?=gettext("Shodan");?></a></td>
-				</tr>
-				<tr>
-					<td><i class="fa fa-globe pull-right"></i></td>
-					<td><a target="_blank" href="https://viz.greynoise.io/query/?gnql=<?=$domain;?>">
-						<?=gettext("Grey Noise");?></a></td>
 				</tr>
 				<tr>
 					<td><i class="fa fa-globe pull-right"></i></td>
